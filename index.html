@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PromptPay QR</title>
+<meta name="description" content="สร้าง PromptPay QR Code ฟรี เรียบง่าย ใช้งานในเบราว์เซอร์" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --ink: #14213d; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #113566; --accent-soft: #eef3fb; --ok: #0a8a3d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Prompt", system-ui, sans-serif; background: var(--bg); color: var(--ink);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px;
+  }
+  .wrap { width: 100%; max-width: 880px; }
+  h1 { font-weight: 600; font-size: 1.6rem; letter-spacing: -.3px; text-align: center; animation: fade .6s ease both; }
+  .sub { text-align: center; color: var(--muted); font-size: .92rem; margin: 6px 0 26px; animation: fade .6s .08s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border: 1px solid var(--line);
+    border-radius: 20px; box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 12px 32px rgba(16,24,40,.06);
+    overflow: hidden; animation: fade .7s .15s ease both;
+  }
+  .panel { padding: 30px 28px; }
+  .form { border-right: 1px solid var(--line); }
+  label { display: block; font-size: .82rem; color: var(--muted); margin: 18px 0 6px; }
+  label:first-child { margin-top: 0; }
+  .field { position: relative; }
+  input[type=text], input[type=number] {
+    width: 100%; padding: 12px 14px; border-radius: 10px; font: inherit; font-size: 1rem; color: var(--ink);
+    background: #fff; border: 1px solid var(--line); outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(17,53,102,.12); }
+  input::placeholder { color: #b6bcc7; }
+  .badge { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: .72rem; padding: 3px 9px; border-radius: 99px;
+    background: var(--accent-soft); color: var(--accent); opacity: 0; transition: opacity .25s; white-space: nowrap; }
+  .badge.show { opacity: 1; }
+
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { cursor: pointer; padding: 4px 12px; border-radius: 99px; font: inherit; font-size: .8rem; color: var(--muted);
+    background: #fff; border: 1px solid var(--line); transition: .2s; }
+  .chip:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  button.go {
+    width: 100%; margin-top: 24px; padding: 13px; border: 0; border-radius: 10px; cursor: pointer;
+    font: 500 1rem "Prompt"; color: #fff; background: var(--accent); transition: transform .15s, background .2s;
+  }
+  button.go:hover { background: #0d2a52; }
+  button.go:active { transform: scale(.985); }
+  .err { color: #c0392b; font-size: .84rem; min-height: 1.2em; margin-top: 10px; }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 25%,75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+
+  .result { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 480px; background: #fcfcfd; }
+  .placeholder { color: #b0b6c2; font-size: .92rem; }
+  .placeholder svg { display: block; margin: 0 auto 12px; }
+  .qrbox { display: none; flex-direction: column; align-items: center; width: 100%; }
+  .qrbox.on { display: flex; }
+  .ticket { width: min(100%, 300px); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 8px 24px rgba(16,24,40,.08); }
+  .ticket.pop { animation: pop .55s cubic-bezier(.2,.9,.3,1) both; }
+  @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+  .ticket .head { background: var(--accent); color: #fff; padding: 10px; font-weight: 600; font-size: .95rem; }
+  .ticket .head small { display: block; font-weight: 300; opacity: .75; font-size: .68rem; }
+  .qrwrap { position: relative; padding: 14px 14px 4px; }
+  canvas#qr { width: 100%; height: auto; display: block; }
+  .scan { position: absolute; left: 14px; right: 14px; top: 14px; height: 2px; background: var(--accent); opacity: 0; box-shadow: 0 0 10px rgba(17,53,102,.5); }
+  .scan.run { animation: scan 1.1s .5s ease-in-out; }
+  @keyframes scan { 0% { top: 14px; opacity: .9; } 100% { top: calc(100% - 18px); opacity: 0; } }
+  .who { padding: 4px 12px 14px; }
+  .who .nm { font-weight: 600; }
+  .who .amt { font-size: 1.6rem; font-weight: 600; color: var(--ok); }
+  .who .id { color: var(--muted); font-size: .76rem; }
+
+  .actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; justify-content: center; }
+  .btn2 { cursor: pointer; padding: 8px 14px; border-radius: 9px; font: 400 .85rem "Prompt"; color: var(--ink); background: #fff; border: 1px solid var(--line); transition: .2s; }
+  .btn2:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 80px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 99px; font-size: .88rem;
+    transition: transform .35s cubic-bezier(.2,.9,.3,1); }
+  .toast.on { transform: translate(-50%, 0); }
+  footer { text-align: center; margin-top: 18px; color: #a0a7b4; font-size: .78rem; }
+
+  @media (max-width: 720px) {
+    .card { grid-template-columns: 1fr; }
+    .form { border-right: 0; border-bottom: 1px solid var(--line); }
+    .result { min-height: 400px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PromptPay QR</h1>
+  <p class="sub">สร้าง QR รับเงินพร้อมเพย์ ไม่เก็บข้อมูล ทำงานในเบราว์เซอร์ล้วนๆ</p>
+
+  <div class="card" id="card">
+    <div class="panel form">
+      <label for="target">เบอร์พร้อมเพย์ / เลขบัตรประชาชน / e-Wallet</label>
+      <div class="field">
+        <input id="target" type="text" inputmode="numeric" placeholder="เช่น 081-234-5678" autocomplete="off" />
+        <span class="badge" id="badge"></span>
+      </div>
+
+      <label for="amount">จำนวนเงิน (บาท) — เว้นว่างได้</label>
+      <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" />
+      <div class="chips">
+        <button class="chip" data-a="20">20</button>
+        <button class="chip" data-a="50">50</button>
+        <button class="chip" data-a="100">100</button>
+        <button class="chip" data-a="500">500</button>
+        <button class="chip" data-a="1000">1,000</button>
+      </div>
+
+      <label for="name">ชื่อที่แสดงบนการ์ด (ไม่บังคับ)</label>
+      <input id="name" type="text" maxlength="40" placeholder="เช่น ร้านกาแฟน้องมะลิ" />
+
+      <div class="err" id="err"></div>
+      <button class="go" id="go">สร้าง QR Code</button>
+    </div>
+
+    <div class="panel result">
+      <div class="placeholder" id="ph">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3m4 0v4h-4m-3-1v1m0-4v0"/></svg>
+        กรอกข้อมูลแล้วกดสร้าง QR
+      </div>
+
+      <div class="qrbox" id="qrbox">
+        <div class="ticket" id="ticket">
+          <div class="head">PromptPay<small>พร้อมเพย์ • สแกนเพื่อจ่ายเงิน</small></div>
+          <div class="qrwrap">
+            <canvas id="qr" width="640" height="640"></canvas>
+            <div class="scan" id="scan"></div>
+          </div>
+          <div class="who">
+            <div class="nm" id="rName"></div>
+            <div class="amt" id="rAmt"></div>
+            <div class="id" id="rId"></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn2" id="dl">ดาวน์โหลด PNG</button>
+          <button class="btn2" id="cp">คัดลอก Payload</button>
+          <button class="btn2" id="re">เล่นอนิเมชันอีกครั้ง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ควรสแกนทดสอบด้วยแอปธนาคารก่อนใช้งานจริงทุกครั้ง</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="promptpay.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const NAVY = "#113566";
+
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 2000); }
+
+/* ตรวจชนิดเลขที่กรอก */
+const targetEl = $("#target");
+targetEl.addEventListener("input", () => {
+  const p = PromptPay.parseTarget(targetEl.value), b = $("#badge");
+  if (p) { b.textContent = p.label; b.classList.add("show"); } else b.classList.remove("show");
+});
+document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => { $("#amount").value = c.dataset.a; }));
+
+/* วาด QR พร้อมแอนิเมชันค่อยๆ ปรากฏจากกลาง */
+let qr, n, mods = [], startT = 0, anim = 0;
+const TOTAL = 1100;
+const ease = (t) => 1 - Math.pow(1 - t, 3);
+
+function buildMods(payload) {
+  qr = qrcode(0, "M"); qr.addData(payload); qr.make(); n = qr.getModuleCount(); mods = [];
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) {
+    const dist = Math.hypot(r - n / 2, c - n / 2) / (n * .71);
+    mods.push({ r, c, delay: dist * 600 + Math.random() * 120 });
+  }
+}
+function drawQR(ctx, size, t) {
+  const pad = 2, cell = size / (n + pad * 2);
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = NAVY;
+  for (const m of mods) {
+    const k = Math.min(Math.max((t - m.delay) / 380, 0), 1);
+    if (k <= 0) continue;
+    const w = cell * ease(k), x = (m.c + pad) * cell + (cell - w) / 2, y = (m.r + pad) * cell + (cell - w) / 2;
+    ctx.globalAlpha = k; ctx.fillRect(x, y, w + .5, w + .5);
+  }
+  ctx.globalAlpha = 1;
+}
+function play() {
+  cancelAnimationFrame(anim); startT = performance.now();
+  const ctx = $("#qr").getContext("2d");
+  const tick = (now) => { const t = now - startT; drawQR(ctx, 640, t); if (t < TOTAL) anim = requestAnimationFrame(tick); else drawQR(ctx, 640, 1e9); };
+  anim = requestAnimationFrame(tick);
+  const s = $("#scan"); s.classList.remove("run"); void s.offsetWidth; s.classList.add("run");
+}
+
+let current = null;
+function fmtTarget(t) {
+  const d = t.value;
+  if (t.type === "phone") return ("0" + d.slice(4)).replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  return d.replace(/^(\d{1})(\d{4})(\d{5})(\d{2})(\d{1})$/, "$1-$2-$3-$4-$5");
+}
+function countUp(el, to) {
+  const t0 = performance.now(), dur = 800;
+  (function f(now) { const k = Math.min((now - t0) / dur, 1), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = "฿ " + (to * e).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (k < 1) requestAnimationFrame(f); })(t0);
+}
+function generate() {
+  const err = $("#err"); err.textContent = "";
+  try {
+    const t = PromptPay.parseTarget(targetEl.value);
+    if (!t) throw new Error("กรอกเบอร์มือถือ 10 หลัก, เลขบัตร 13 หลัก หรือ e-Wallet 15 หลักให้ถูกต้อง");
+    const amt = parseFloat($("#amount").value) || 0;
+    const payload = PromptPay.generatePayload(t, amt);
+    current = { payload, t, amt, name: $("#name").value.trim() };
+    buildMods(payload);
+
+    $("#ph").style.display = "none"; $("#qrbox").classList.add("on");
+    const tk = $("#ticket"); tk.classList.remove("pop"); void tk.offsetWidth; tk.classList.add("pop");
+    $("#rName").textContent = current.name || "PromptPay";
+    $("#rId").textContent = t.label + " " + fmtTarget(t);
+    amt > 0 ? countUp($("#rAmt"), amt) : ($("#rAmt").textContent = "ระบุจำนวนเงินเอง");
+    play();
+    if (innerWidth < 720) $("#qrbox").scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (e) {
+    err.textContent = e.message; const c = $("#card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
+  }
+}
+$("#go").addEventListener("click", generate);
+document.querySelectorAll("input").forEach((i) => i.addEventListener("keydown", (e) => e.key === "Enter" && generate()));
+$("#re").addEventListener("click", () => current && play());
+$("#cp").addEventListener("click", () => current && navigator.clipboard.writeText(current.payload).then(() => toast("คัดลอก Payload แล้ว")));
+
+/* ดาวน์โหลดการ์ด PNG */
+$("#dl").addEventListener("click", () => {
+  if (!current) return;
+  const c = document.createElement("canvas"); c.width = 900; c.height = 1180; const x = c.getContext("2d");
+  x.fillStyle = "#fff"; x.fillRect(0, 0, 900, 1180);
+  x.fillStyle = NAVY; x.fillRect(0, 0, 900, 150);
+  x.fillStyle = "#fff"; x.textAlign = "center"; x.font = "600 60px Prompt, sans-serif"; x.fillText("PromptPay", 450, 85);
+  x.font = "300 28px Prompt, sans-serif"; x.fillText("พร้อมเพย์ • สแกนเพื่อจ่ายเงิน", 450, 128);
+  const q = document.createElement("canvas"); q.width = q.height = 700; drawQR(q.getContext("2d"), 700, 1e9);
+  x.drawImage(q, 100, 190, 700, 700);
+  x.fillStyle = NAVY; x.font = "600 52px Prompt, sans-serif"; x.fillText(current.name || "PromptPay", 450, 975);
+  if (current.amt > 0) { x.fillStyle = "#0a8a3d"; x.font = "600 72px Prompt, sans-serif"; x.fillText("฿ " + current.amt.toLocaleString("th-TH", { minimumFractionDigits: 2 }), 450, 1070); }
+  x.fillStyle = "#6b7280"; x.font = "300 28px Prompt, sans-serif"; x.fillText(current.t.label + " " + fmtTarget(current.t), 450, 1130);
+  const a = document.createElement("a"); a.download = "promptpay-qr.png"; a.href = c.toDataURL("image/png"); a.click();
+  toast("ดาวน์โหลดแล้ว");
+});
+</script>
+</body>
+</html>
