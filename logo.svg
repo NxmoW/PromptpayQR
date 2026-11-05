@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="256" height="256" role="img" aria-label="PromptPay QR logo">
+  <rect width="128" height="128" rx="28" fill="#113566"/>
+  <!-- finder patterns -->
+  <g fill="none" stroke="#fff" stroke-width="5">
+    <rect x="16.5" y="16.5" width="29" height="29" rx="5"/>
+    <rect x="82.5" y="16.5" width="29" height="29" rx="5"/>
+    <rect x="16.5" y="82.5" width="29" height="29" rx="5"/>
+  </g>
+  <g fill="#fff">
+    <rect x="25" y="25" width="12" height="12" rx="2.5"/>
+    <rect x="91" y="25" width="12" height="12" rx="2.5"/>
+    <rect x="25" y="91" width="12" height="12" rx="2.5"/>
+    <!-- data dots -->
+    <rect x="56" y="18" width="8" height="8" rx="2"/>
+    <rect x="56" y="34" width="8" height="8" rx="2"/>
+    <rect x="18" y="56" width="8" height="8" rx="2"/>
+    <rect x="34" y="56" width="8" height="8" rx="2"/>
+    <rect x="56" y="56" width="8" height="8" rx="2"/>
+    <rect x="72" y="56" width="8" height="8" rx="2"/>
+    <rect x="100" y="56" width="8" height="8" rx="2"/>
+    <rect x="56" y="72" width="8" height="8" rx="2"/>
+  </g>
+  <!-- baht coin -->
+  <circle cx="92" cy="92" r="23" fill="#ffd54a"/>
+  <g fill="none" stroke="#113566" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="4.5" d="M85 80H94a6 6 0 0 1 0 12H85M85 92H95.5a6 6 0 0 1 0 12H85M85 80V104"/>
+    <path stroke-width="3.2" d="M89.5 75V109"/>
+  </g>
+</svg>

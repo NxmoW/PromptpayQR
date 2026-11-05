@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>PromptPay QR</title>
 <meta name="description" content="สร้าง PromptPay QR Code ฟรี เรียบง่าย ใช้งานในเบราว์เซอร์" />
+<link rel="icon" type="image/svg+xml" href="logo.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -19,6 +20,7 @@
     min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px;
   }
   .wrap { width: 100%; max-width: 880px; }
+  .logo { display: block; width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 16px; box-shadow: 0 6px 18px rgba(17,53,102,.22); animation: fade .6s ease both; }
   h1 { font-weight: 600; font-size: 1.6rem; letter-spacing: -.3px; text-align: center; animation: fade .6s ease both; }
   .sub { text-align: center; color: var(--muted); font-size: .92rem; margin: 6px 0 26px; animation: fade .6s .08s ease both; }
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -96,6 +98,7 @@
 </head>
 <body>
 <div class="wrap">
+  <img src="logo.svg" alt="โลโก้ PromptPay QR" class="logo" />
   <h1>PromptPay QR</h1>
   <p class="sub">สร้าง QR รับเงินพร้อมเพย์ ไม่เก็บข้อมูล ทำงานในเบราว์เซอร์ล้วนๆ</p>
 
@@ -157,58 +160,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>
-/* PromptPay payload generator (EMVCo QR, Thai Bank standard) */
-(function (root) {
-  function tlv(tag, value) {
-    return tag + String(value.length).padStart(2, "0") + value;
-  }
-
-  function crc16(str) {
-    let crc = 0xffff;
-    for (let i = 0; i < str.length; i++) {
-      crc ^= str.charCodeAt(i) << 8;
-      for (let j = 0; j < 8; j++) {
-        crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
-      }
-    }
-    return crc.toString(16).toUpperCase().padStart(4, "0");
-  }
-
-  // คืน { type, value } หรือ null ถ้ารูปแบบไม่ถูกต้อง
-  function parseTarget(input) {
-    const d = String(input || "").replace(/\D/g, "");
-    if (/^0\d{9}$/.test(d)) return { type: "phone", tag: "01", value: "0066" + d.slice(1), label: "เบอร์มือถือ" };
-    if (/^66\d{9}$/.test(d)) return { type: "phone", tag: "01", value: "00" + d, label: "เบอร์มือถือ" };
-    if (d.length === 13) return { type: "id", tag: "02", value: d, label: "เลขบัตรประชาชน / เลขผู้เสียภาษี" };
-    if (d.length === 15) return { type: "ewallet", tag: "03", value: d, label: "e-Wallet ID" };
-    return null;
-  }
-
-  function generatePayload(target, amount) {
-    const t = typeof target === "string" ? parseTarget(target) : target;
-    if (!t) throw new Error("รูปแบบเบอร์/เลขประจำตัวไม่ถูกต้อง");
-    const amt = amount !== undefined && amount !== null && amount !== "" ? Number(amount) : 0;
-    if (isNaN(amt) || amt < 0 || amt > 9999999.99) throw new Error("จำนวนเงินไม่ถูกต้อง");
-
-    const merchant = tlv("00", "A000000677010111") + tlv(t.tag, t.value);
-    let data =
-      tlv("00", "01") +
-      tlv("01", amt > 0 ? "12" : "11") +
-      tlv("29", merchant) +
-      tlv("58", "TH") +
-      tlv("53", "764") +
-      (amt > 0 ? tlv("54", amt.toFixed(2)) : "") +
-      "6304";
-    return data + crc16(data);
-  }
-
-  const api = { generatePayload, parseTarget, crc16 };
-  if (typeof module !== "undefined" && module.exports) module.exports = api;
-  else root.PromptPay = api;
-})(typeof window !== "undefined" ? window : globalThis);
-
-</script>
+<script src="promptpay.js"></script>
 <script>
 const $ = (s) => document.querySelector(s);
 const NAVY = "#113566";
